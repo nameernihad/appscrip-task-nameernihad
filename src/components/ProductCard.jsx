@@ -1,4 +1,4 @@
-import { faHeart } from "@fortawesome/free-solid-svg-icons";
+import { faHeart, faStar } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios from "axios";
 import { useEffect, useState } from "react";
@@ -62,14 +62,17 @@ export const ProductCard = () => {
         products={products}
         showSideBar={showSideBar}
         setShowSideBar={setShowSideBar}
+        setProducts={setProducts}
       />
 
       {loading ? (
         <ProductCardSkeleton />
       ) : (
-        <div className="flex w-full">
-          {showSideBar && <Sidebar />}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3  xl:grid-cols-4 px-12 py-5 gap-4">
+        <div className=" flex w-full">
+          {showSideBar && (
+            <Sidebar setProducts={setProducts} setLoading={setLoading} />
+          )}
+          <div className=" grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 px-12 py-5 gap-4">
             {products.map((product) => (
               <div
                 key={product.id}
@@ -88,16 +91,47 @@ export const ProductCard = () => {
                       {truncateTitle(product.title)}
                     </h5>
                   </a>
+                  <p className="mb-1 text-sm text-gray-600">
+                    {product.category}
+                  </p>
+                  <p className="mb-2 text-2xl font-bold text-gray-700">${product.price}</p>
                   <p className="mb-3 font-normal text-gray-700">
                     {truncateDescription(product.description)} <a href="#"></a>
                   </p>
+                  <div className="flex items-center mb-2">
+                    <div className="flex items-center">
+                      {Array.from({ length: 5 }, (_, index) => (
+                        <FontAwesomeIcon
+                          key={index}
+                          icon={faStar}
+                          className={`text-xs ${
+                            index < product.rating.rate
+                              ? "text-yellow-500"
+                              : "text-gray-300"
+                          }`}
+                        />
+                      ))}
+                      <span className="ml-1 text-xs text-gray-500">
+                        {product.rating.count}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              <div className="px-5 ">
+                {product.rating.count < 150 ? (
+                    <p className="text-red-500 font-semibold">Limited Stock</p>
+                  ) : (
+                    <div></div>
+                  )}
                 </div>
                 <div className="flex justify-between items-center p-5">
-                  <button className="relative inline-flex items-center justify-center p-0.5 mb-2 me-2 overflow-hidden text-sm font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-purple-600 to-blue-500 group-hover:from-purple-600 group-hover:to-blue-500 hover:text-white dark:text-white focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800">
-                    <span className="relative px-5 py-2.5 text-black hover:text-white transition-all ease-in duration-75 bg-white rounded-md group-hover:bg-opacity-0">
-                      Add to cart
-                    </span>
-                  </button>
+                  
+                    <button className="relative inline-flex items-center justify-center p-0.5 mb-2 me-2 overflow-hidden text-sm font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-purple-600 to-blue-500 group-hover:from-purple-600 group-hover:to-blue-500 hover:text-white dark:text-white focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800">
+                      <span className="relative px-5 py-2.5 text-black hover:text-white transition-all ease-in duration-75 bg-white rounded-md group-hover:bg-opacity-0">
+                        Add to cart
+                      </span>
+                    </button>
+                  
                   <FontAwesomeIcon
                     icon={faHeart}
                     className={`transition-all w-6 h-6 duration-500 ${

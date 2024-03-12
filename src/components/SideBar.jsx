@@ -1,87 +1,174 @@
 /* eslint-disable react/prop-types */
+import axios from "axios";
+import { useEffect, useState } from "react";
 
-const SidebarItem = ({ icon, text }) => {
+const AccordionItem = ({ id, heading, content }) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const toggleAccordion = () => {
+    setIsOpen(!isOpen);
+  };
+
   return (
-    <li className="">
-      <a
-        href="#"
-        className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+    <div id={`accordion-collapse-${id}`} data-accordion="collapse">
+      <h2 id={`accordion-collapse-heading-${id}`}>
+        <button
+          type="button"
+          className="flex items-center justify-between w-full p-5 font-medium rtl:text-right text-gray-500 border border-gray-200 rounded-t-xl focus:ring-gray-200 hover:bg-gray-100 gap-3"
+          data-accordion-target={`#accordion-collapse-body-${id}`}
+          aria-expanded={isOpen}
+          aria-controls={`accordion-collapse-body-${id}`}
+          onClick={toggleAccordion}
+        >
+          <span>{heading}</span>
+          <svg
+            data-accordion-icon
+            className={`w-3 h-3 rotate-${isOpen ? "180" : "0"} shrink-0`}
+            aria-hidden="true"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 10 6"
+          >
+            <path
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M9 5 5 1 1 5"
+            />
+          </svg>
+        </button>
+      </h2>
+      <div
+        id={`accordion-collapse-body-${id}`}
+        className={`overflow-hidden transition-height duration-300 ${
+          isOpen ? "h-auto" : "h-0"
+        }`}
+        aria-labelledby={`accordion-collapse-heading-${id}`}
       >
-        {icon}
-        <span className="flex-1 ms-3 whitespace-nowrap text-black">{text}</span>
-      </a>
-    </li>
+        {content}
+      </div>
+    </div>
   );
 };
 
-const Sidebar = () => {
+const Sidebar = ({ setProducts, setLoading }) => {
+  const [category, setCategory] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState("");
+
+  useEffect(() => {
+    const baseUrl = import.meta.env.VITE_BASE_URL;
+    axios
+      .get(`${baseUrl}/products/categories`)
+      .then((res) => {
+        setCategory(res.data);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }, []);
+
+  const handleCategoryChange = (e) => {
+    setSelectedCategory(e.target.value);
+  };
+
+  useEffect(() => {
+    const baseUrl = import.meta.env.VITE_BASE_URL;
+    axios
+      .get(`${baseUrl}/products/category/${selectedCategory}`)
+      .then((res) => {
+        setLoading(true);
+        const initialActiveProducts = {};
+        res.data.forEach((product) => {
+          initialActiveProducts[product.id] = false;
+        });
+        setProducts(res.data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.log(err);
+        setLoading(false);
+      });
+  }, [selectedCategory]);
+
   return (
     <aside
       id="default-sidebar"
-      className=" w-96 h-screen transition-transform -translate-x-full sm:translate-x-0"
+      className="absolute w-screen sm:w-96 h-screen transition-transform  sm:translate-x-0"
       aria-label="Sidebar"
     >
-      <div className="h-full px-3 py-4 overflow-y-auto bg-gray-50 ">
+      <div className="h-full px-3 py-4 overflow-y-auto bg-gray-50">
         <ul className="space-y-2 font-medium">
-          <SidebarItem
-            icon={
-              <svg
-                className="w-5 h-5 text-gray-500 transition duration-75  group-hover:text-gray-900 "
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="currentColor"
-                viewBox="0 0 22 21"
-              >
-                <path d="M16.975 11H10V4.025a1 1 0 0 0-1.066-.998 8.5 8.5 0 1 0 9.039 9.039.999.999 0 0 0-1-1.066h.002Z" />
-                <path d="M12.5 0c-.157 0-.311.01-.565.027A1 1 0 0 0 11 1.02V10h8.975a1 1 0 0 0 1-.935c.013-.188.028-.374.028-.565A8.51 8.51 0 0 0 12.5 0Z" />
-              </svg>
-            }
-            text="Dashboard"
+          <AccordionItem
+            id="1"
+            heading="Categories"
+            content={category.map((cat, index) => (
+              <div key={index} className="p-5 border border-b-0 border-gray-200">
+                <label className="block mb-2 text-gray-500 dark:text-gray-400">
+                  Select Category:
+                </label>
+                <div className="flex items-center mb-2">
+                  <input
+                    type="radio"
+                    id={`category-${index}`}
+                    name="category"
+                    className="mr-2"
+                    value={cat}
+                    checked={selectedCategory === cat}
+                    onChange={handleCategoryChange} // Add onChange event handler
+                  />
+                  <label htmlFor={`category-${index}`} className="text-gray-500">
+                    {cat}
+                  </label>
+                </div>
+              </div>
+            ))}
           />
-          <SidebarItem
-            icon={
-              <svg
-                className="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75  group-hover:text-gray-900 "
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="currentColor"
-                viewBox="0 0 18 18"
-              >
-                <path d="M6.143 0H1.857A1.857 1.857 0 0 0 0 1.857v4.286C0 7.169.831 8 1.857 8h4.286A1.857 1.857 0 0 0 8 6.143V1.857A1.857 1.857 0 0 0 6.143 0Zm10 0h-4.286A1.857 1.857 0 0 0 10 1.857v4.286C10 7.169 10.831 8 11.857 8h4.286A1.857 1.857 0 0 0 18 6.143V1.857A1.857 1.857 0 0 0 16.143 0Zm-10 10H1.857A1.857 1.857 0 0 0 0 11.857v4.286C0 17.169.831 18 1.857 18h4.286A1.857 1.857 0 0 0 8 16.143v-4.286A1.857 1.857 0 0 0 6.143 10Zm10 0h-4.286A1.857 1.857 0 0 0 10 11.857v4.286c0 1.026.831 1.857 1.857 1.857h4.286A1.857 1.857 0 0 0 18 16.143v-4.286A1.857 1.857 0 0 0 16.143 10Z" />
-              </svg>
+          <AccordionItem
+            id="1"
+            heading="Occasion"
+            content={
+              <div className="p-5 border border-b-0 border-gray-200">
+                <label className="block mb-2 text-gray-500 dark:text-gray-400">
+                  Select Category:
+                </label>
+                <div className="flex items-center mb-2">
+                  <input
+                    type="radio"
+                    id={`category`}
+                    name="category"
+                    className="mr-2"
+                  />
+                  <label htmlFor={`category`} className="text-gray-500">
+                    domo1
+                  </label>
+                </div>
+                <div className="flex items-center mb-2">
+                  <input
+                    type="radio"
+                    id={`category`}
+                    name="category"
+                    className="mr-2"
+                  />
+                  <label htmlFor={`category`} className="text-gray-500">
+                    domo2
+                  </label>
+                </div>
+                <div className="flex items-center mb-2">
+                  <input
+                    type="radio"
+                    id={`category`}
+                    name="category"
+                    className="mr-2"
+                  />
+                  <label htmlFor={`category`} className="text-gray-500">
+                    domo3
+                  </label>
+                </div>
+              </div>
             }
-            text="Kanban"
           />
-          <SidebarItem
-            icon={
-              <svg
-                className="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75  group-hover:text-gray-900 "
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="currentColor"
-                viewBox="0 0 18 18"
-              >
-                <path d="M6.143 0H1.857A1.857 1.857 0 0 0 0 1.857v4.286C0 7.169.831 8 1.857 8h4.286A1.857 1.857 0 0 0 8 6.143V1.857A1.857 1.857 0 0 0 6.143 0Zm10 0h-4.286A1.857 1.857 0 0 0 10 1.857v4.286C10 7.169 10.831 8 11.857 8h4.286A1.857 1.857 0 0 0 18 6.143V1.857A1.857 1.857 0 0 0 16.143 0Zm-10 10H1.857A1.857 1.857 0 0 0 0 11.857v4.286C0 17.169.831 18 1.857 18h4.286A1.857 1.857 0 0 0 8 16.143v-4.286A1.857 1.857 0 0 0 6.143 10Zm10 0h-4.286A1.857 1.857 0 0 0 10 11.857v4.286c0 1.026.831 1.857 1.857 1.857h4.286A1.857 1.857 0 0 0 18 16.143v-4.286A1.857 1.857 0 0 0 16.143 10Z" />
-              </svg>
-            }
-            text="Kanban"
-          />
-          <SidebarItem
-            icon={
-              <svg
-                className="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75  group-hover:text-gray-900 "
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="currentColor"
-                viewBox="0 0 18 18"
-              >
-                <path d="M6.143 0H1.857A1.857 1.857 0 0 0 0 1.857v4.286C0 7.169.831 8 1.857 8h4.286A1.857 1.857 0 0 0 8 6.143V1.857A1.857 1.857 0 0 0 6.143 0Zm10 0h-4.286A1.857 1.857 0 0 0 10 1.857v4.286C10 7.169 10.831 8 11.857 8h4.286A1.857 1.857 0 0 0 18 6.143V1.857A1.857 1.857 0 0 0 16.143 0Zm-10 10H1.857A1.857 1.857 0 0 0 0 11.857v4.286C0 17.169.831 18 1.857 18h4.286A1.857 1.857 0 0 0 8 16.143v-4.286A1.857 1.857 0 0 0 6.143 10Zm10 0h-4.286A1.857 1.857 0 0 0 10 11.857v4.286c0 1.026.831 1.857 1.857 1.857h4.286A1.857 1.857 0 0 0 18 16.143v-4.286A1.857 1.857 0 0 0 16.143 10Z" />
-              </svg>
-            }
-            text="Kanban"
-          />
-
-          {/* Other sidebar items */}
+          {/* Other AccordionItem components */}
         </ul>
       </div>
     </aside>
